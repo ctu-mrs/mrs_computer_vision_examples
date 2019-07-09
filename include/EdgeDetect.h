@@ -62,7 +62,6 @@ private:
   cv_bridge::CvImage          cv_ptr_;
   ros::Time                   time_last_image_;
 
-
   void            callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr &msg);
   ros::Subscriber sub_camera_info_;
   ros::Time       time_last_camera_info_;
@@ -74,7 +73,6 @@ private:
   int        _rate_timer_check_subscribers_;
 
   // | -------------------- image processing -------------------- |
-  //
   void doSimpleImageProcessing(int, void *);
 
   /* increment as images comes in */
@@ -85,10 +83,12 @@ private:
   int const max_low_threshold_ = 100;
 
   // | ----------------------- publishers ----------------------- |
+
   ros::Publisher pub_test_;
   int            _rate_timer_publish_;
 
   // | --------------------- other functions -------------------- |
+
   void publishImageNumber(uint64_t count);
 };
 //}

@@ -9,11 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   std_msgs
-  geometry_msgs
-  dynamic_reconfigure
   cv_bridge
-  tf
-  message_generation
   mrs_lib
 )
 

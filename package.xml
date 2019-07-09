@@ -16,12 +16,8 @@
   <depend>nodelet</depend>
   <depend>std_msgs</depend>
   <depend>image_transport</depend>
-  <depend>geometry_msgs</depend>
   <depend>mrs_lib</depend>
-  <depend>dynamic_reconfigure</depend>
   <depend>cv_bridge</depend>
-  <depend>tf</depend>
-  <depend>message_generation</depend>
 
   <export>
     <!-- The plugins.xml file defines nodelet as a plugin -->

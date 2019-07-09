@@ -185,7 +185,6 @@ void EdgeDetect::doSimpleImageProcessing(int, void*) {
   int ratio       = 3;
   int kernel_size = 3;
 
-
   {
     std::scoped_lock lock(mutex_image_);
 
@@ -217,7 +216,6 @@ void EdgeDetect::doSimpleImageProcessing(int, void*) {
 }
 
 //}
-
 
 }  // namespace vision_example
 
