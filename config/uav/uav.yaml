@@ -1,0 +1,5 @@
+rate:
+  # how often to publish my topic?
+  publish: 10 # [Hz]
+  # how often check whether msgs are arriving?
+  check_subscribers: 1 # [Hz]
