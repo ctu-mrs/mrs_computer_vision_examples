@@ -32,8 +32,9 @@ void EdgeDetect::onInit() {
   /* create windows */
   if (_gui_) {
 
-    cv::namedWindow("original", CV_WINDOW_AUTOSIZE);
-    cv::namedWindow("edges", CV_WINDOW_AUTOSIZE);
+    int flags = cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO | cv::WINDOW_GUI_EXPANDED;
+    cv::namedWindow("original", flags);
+    cv::namedWindow("edges", flags);
 
     /* Create a Trackbar for user to enter threshold */
     cv::createTrackbar("Min Threshold:", "edges", &low_threshold_, max_low_threshold_);
