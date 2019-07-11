@@ -6,8 +6,7 @@
 namespace vision_example
 {
 
-/* onInit() //{ */
-
+/* onInit() method //{ */
 void EdgeDetect::onInit()
 {
 
@@ -61,8 +60,8 @@ void EdgeDetect::onInit()
 
   // | ------------------ initialize publishers ----------------- |
   pub_test_       = nh.advertise<std_msgs::UInt64>("test_publisher", 1);
-  pub_edges_      = nh.advertise<sensor_msgs::Image>("detected_edges", 1);
-  pub_projection_ = nh.advertise<sensor_msgs::Image>("projected_point", 1);
+  pub_edges_      = it.advertise("detected_edges", 1);
+  pub_projection_ = it.advertise("projected_point", 1);
 
   // | -------------------- initialize timers ------------------- |
   timer_check_subscribers_ = nh.createTimer(ros::Rate(_rate_timer_check_subscribers_), &EdgeDetect::callbackTimerCheckSubscribers, this);
@@ -71,16 +70,13 @@ void EdgeDetect::onInit()
 
   is_initialized_ = true;
 }
-
 //}
 
 // | ---------------------- msg callbacks --------------------- |
 
-/* callbackCameraInfo() //{ */
-
+/* callbackCameraInfo() method //{ */
 void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg)
 {
-
   if (!is_initialized_)
     return;
 
@@ -89,14 +85,10 @@ void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg)
 
   // update the camera model using the latest camera info message
   camera_model_.fromCameraInfo(*msg);
-
-  ROS_INFO_STREAM_THROTTLE(1, "[EdgeDetect]: Camera info header: " << msg->header);
 }
-
 //}
 
-/* callbackImage() //{ */
-
+/* callbackImage() method //{ */
 void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
 {
   const std::string color_encoding = "bgr8";
@@ -165,14 +157,13 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
     /* !!! needed by OpenCV to correctly show the images using cv::imshow !!! */
     cv::waitKey(1);
 }
-
 //}
 
 // | --------------------- timer callbacks -------------------- |
 
-/* callbackTimerCheckSubscribers() //{ */
-
-void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::TimerEvent& te) {
+/* callbackTimerCheckSubscribers() method //{ */
+void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::TimerEvent& te)
+{
 
   if (!is_initialized_)
     return;
@@ -205,14 +196,13 @@ void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::Timer
   // Here, the variable lock goes out of scope and mutex_counters_ is automatically released (unlocked)
   // in its destructor.
 }
-
 //}
 
 // | -------------------- other functions ------------------- |
 
-/* publishImageNumber() //{ */
-
-void EdgeDetect::publishImageNumber(uint64_t count) {
+/* publishImageNumber() method //{ */
+void EdgeDetect::publishImageNumber(uint64_t count)
+{
 
   std_msgs::UInt64 message;
 
@@ -227,11 +217,10 @@ void EdgeDetect::publishImageNumber(uint64_t count) {
     ROS_ERROR("Exception caught during publishing topic %s.", pub_test_.getTopic().c_str());
   }
 }
-
 //}
 
 /* publishOpenCVImage() method //{ */
-void EdgeDetect::publishOpenCVImage(cv::InputArray image, const std_msgs::Header& header, const std::string& encoding, ros::Publisher pub)
+void EdgeDetect::publishOpenCVImage(cv::InputArray image, const std_msgs::Header& header, const std::string& encoding, const image_transport::Publisher& pub)
 {
   // Prepare a cv_bridge image to be converted to the ROS message
   cv_bridge::CvImage bridge_image_out;

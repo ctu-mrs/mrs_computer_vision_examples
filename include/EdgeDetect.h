@@ -67,8 +67,8 @@ namespace vision_example
     image_transport::Subscriber sub_image_;
     cv_bridge::CvImageConstPtr  bridge_image_ptr_;
 
-    void            callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg);
-    ros::Subscriber sub_camera_info_;
+    void                               callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg);
+    ros::Subscriber                    sub_camera_info_;
     image_geometry::PinholeCameraModel camera_model_;
 
     // | --------------------- timer callbacks -------------------- |
@@ -80,8 +80,8 @@ namespace vision_example
     // | -------------------- image processing -------------------- |
 
     static cv::Mat detectEdgesCanny(cv::InputArray image, int low_threshold);
-    static void showEdgeImage(cv::InputArray image, cv::InputArray detected_edges);
-    cv::Mat projectWorldPointToImage(cv::InputArray image, const ros::Time& image_stamp, const double x, const double y, const double z);
+    static void    showEdgeImage(cv::InputArray image, cv::InputArray detected_edges);
+    cv::Mat        projectWorldPointToImage(cv::InputArray image, const ros::Time& image_stamp, const double x, const double y, const double z);
 
     // | --------- variables, related to message checking --------- |
 
@@ -98,23 +98,23 @@ namespace vision_example
     int const max_low_threshold_ = 100;
 
     // | ------------- variables for point projection ------------- |
-    std::string world_frame_id_;
-    double world_point_x_;
-    double world_point_y_;
-    double world_point_z_;
-    tf2_ros::Buffer tf_buffer_;
+    std::string                                 world_frame_id_;
+    double                                      world_point_x_;
+    double                                      world_point_y_;
+    double                                      world_point_z_;
+    tf2_ros::Buffer                             tf_buffer_;
     std::unique_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
 
     // | ----------------------- publishers ----------------------- |
 
-    ros::Publisher pub_test_;
-    ros::Publisher pub_edges_;
-    ros::Publisher pub_projection_;
-    int            _rate_timer_publish_;
+    ros::Publisher             pub_test_;
+    image_transport::Publisher pub_edges_;
+    image_transport::Publisher pub_projection_;
+    int                        _rate_timer_publish_;
 
     // | --------------------- other functions -------------------- |
 
-    void publishOpenCVImage(cv::InputArray detected_edges, const std_msgs::Header& header, const std::string& encoding, ros::Publisher pub);
+    void publishOpenCVImage(cv::InputArray detected_edges, const std_msgs::Header& header, const std::string& encoding, const image_transport::Publisher& pub);
     void publishImageNumber(uint64_t count);
 
     bool transformPointFromWorld(const geometry_msgs::Point& point, const std::string& to_frame, const ros::Time& stamp, geometry_msgs::Point& point_out);
