@@ -18,6 +18,9 @@
   <depend>image_transport</depend>
   <depend>mrs_lib</depend>
   <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>image_geometry</depend>
 
   <export>
     <!-- The plugins.xml file defines nodelet as a plugin -->

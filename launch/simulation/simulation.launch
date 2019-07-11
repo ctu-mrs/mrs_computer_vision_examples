@@ -32,8 +32,8 @@
       <rosparam file="$(find vision_example)/config/simulation/simulation.yaml" />
 
       <!-- Subscribers -->
-      <remap from="~image_in" to="bluefox_wall/image_raw" />
-      <remap from="~camera_info_in" to="bluefox_wall/camera_info" />
+      <remap from="~image_in" to="bluefox/image_raw" />
+      <remap from="~camera_info_in" to="bluefox/camera_info" />
 
       <!-- Publishers -->
       <remap from="~test_publisher" to="~image_number" />

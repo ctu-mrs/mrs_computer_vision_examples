@@ -8,7 +8,8 @@ namespace vision_example
 
 /* onInit() //{ */
 
-void EdgeDetect::onInit() {
+void EdgeDetect::onInit()
+{
 
   // | ---------------- set my booleans to false ---------------- |
   // but remember, always set them to their default value in the header file
@@ -28,13 +29,20 @@ void EdgeDetect::onInit() {
   param_loader.load_param("gui", _gui_);
   param_loader.load_param("rate/publish", _rate_timer_publish_);
   param_loader.load_param("rate/check_subscribers", _rate_timer_check_subscribers_);
+  param_loader.load_param("canny_threshold", low_threshold_);
+  param_loader.load_param("world_frame_id", world_frame_id_);
+  param_loader.load_param("world_point/x", world_point_x_);
+  param_loader.load_param("world_point/y", world_point_y_);
+  param_loader.load_param("world_point/z", world_point_z_);
 
   /* create windows */
-  if (_gui_) {
+  if (_gui_)
+  {
 
     int flags = cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO | cv::WINDOW_GUI_EXPANDED;
     cv::namedWindow("original", flags);
     cv::namedWindow("edges", flags);
+    cv::namedWindow("world_point", flags);
 
     /* Create a Trackbar for user to enter threshold */
     cv::createTrackbar("Min Threshold:", "edges", &low_threshold_, max_low_threshold_);
@@ -43,12 +51,18 @@ void EdgeDetect::onInit() {
   /* initialize the image transport, needs node handle */
   image_transport::ImageTransport it(nh);
 
+  // | -------------- initialize tranform listener -------------- |
+  // the transform listener will fill the TF buffer with latest transforms
+  tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_);
+
   // | ----------------- initialize subscribers ----------------- |
   sub_image_       = it.subscribe("image_in", 1, &EdgeDetect::callbackImage, this);
   sub_camera_info_ = nh.subscribe("camera_info_in", 1, &EdgeDetect::callbackCameraInfo, this, ros::TransportHints().tcpNoDelay());
 
   // | ------------------ initialize publishers ----------------- |
-  pub_test_ = nh.advertise<std_msgs::UInt64>("test_publisher", 1);
+  pub_test_       = nh.advertise<std_msgs::UInt64>("test_publisher", 1);
+  pub_edges_      = nh.advertise<sensor_msgs::Image>("detected_edges", 1);
+  pub_projection_ = nh.advertise<sensor_msgs::Image>("projected_point", 1);
 
   // | -------------------- initialize timers ------------------- |
   timer_check_subscribers_ = nh.createTimer(ros::Rate(_rate_timer_check_subscribers_), &EdgeDetect::callbackTimerCheckSubscribers, this);
@@ -64,7 +78,8 @@ void EdgeDetect::onInit() {
 
 /* callbackCameraInfo() //{ */
 
-void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg) {
+void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg)
+{
 
   if (!is_initialized_)
     return;
@@ -72,50 +87,83 @@ void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg) 
   got_camera_info_ = true;
   time_last_camera_info_ = ros::Time::now();
 
-  sensor_msgs::CameraInfo info = *msg;
+  // update the camera model using the latest camera info message
+  camera_model_.fromCameraInfo(*msg);
 
-  ROS_INFO_STREAM_THROTTLE(1, "[EdgeDetect]: header " << info.header);
+  ROS_INFO_STREAM_THROTTLE(1, "[EdgeDetect]: Camera info header: " << msg->header);
 }
 
 //}
 
 /* callbackImage() //{ */
 
-void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
+void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
+{
+  const std::string color_encoding = "bgr8";
+  const std::string grayscale_encoding = "mono8";
 
   if (!is_initialized_)
     return;
 
-  got_image_ = true;
-  image_counter_++;
-  time_last_image_ = ros::Time::now();
-
+  /* update the checks-related variables (in a thread-safe manner) */
   {
-    std::scoped_lock lock(mutex_image_);
-
-    image_ = cv_bridge::toCvShare(msg, "bgr8")->image;
+    std::scoped_lock lock(mutex_counters_);
+    got_image_ = true;
+    image_counter_++;
+    time_last_image_ = ros::Time::now();
   }
 
-  /* show the image in gui */
-  if (_gui_) {
+  std_msgs::Header msg_header;
+  /* copy the image message to a member variable */
+  {
+    // toCvShare avoids copying the image data and instead copies only the (smart) constpointer
+    // to the data. Then, the data cannot be changed (it is potentially shared between multiple nodes) and
+    // it is automatically freed when all pointers to it are released. If you want to modify the image data,
+    // use toCvCopy (see https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages),
+    // or copy the image data using cv::Mat::copyTo() method.
+    // Adittionally, toCvShare and toCvCopy will convert the input image to the specified encoding
+    // if it differs from the one in the message. Try to be consistent in what encodings you use throughout the code.
+    bridge_image_ptr_ = cv_bridge::toCvShare(msg, color_encoding);
+    msg_header = msg->header;
 
-    {
-      std::scoped_lock lock(mutex_image_);
-      cv::imshow("original", image_);
-    }
-
-    /* needed to correctly show the image */
-    cv::waitKey(1);
+    /* show the image in gui (!the image will be displayed after calling cv::waitKey()!) */
+    if (_gui_)
+      cv::imshow("original", bridge_image_ptr_->image);
   }
 
   /* output a text about it */
   ROS_INFO_THROTTLE(1, "[EdgeDetect]: Total of %u images received so far", (unsigned int)image_counter_);
 
+  // | ---------- Detect edges in the image using Canny --------- |
+
   /* find edges in the image */
-  EdgeDetect::doSimpleImageProcessing(0, 0);
+  const auto detected_edges = EdgeDetect::detectEdgesCanny(bridge_image_ptr_->image, low_threshold_);
+
+  /* show the edges image in gui */
+  if (_gui_)
+    EdgeDetect::showEdgeImage(bridge_image_ptr_->image, detected_edges);
+
+  /* publish the image with the detected edges */
+  EdgeDetect::publishOpenCVImage(detected_edges, msg_header, grayscale_encoding, pub_edges_);
+  
+  // | ----------- Project a world point to the image ----------- |
+
+  /* find edges in the image */
+  const auto projection_image = EdgeDetect::projectWorldPointToImage(bridge_image_ptr_->image, msg_header.stamp, 0, 0, 0);
+
+  /* show the projection image in gui (!the image will be displayed after calling cv::waitKey()!) */
+  if (_gui_)
+    cv::imshow("world_point", projection_image);
+
+  /* publish the image with the detected edges */
+  EdgeDetect::publishOpenCVImage(projection_image, msg_header, color_encoding, pub_projection_);
 
   /* publish image count */
   EdgeDetect::publishImageNumber(image_counter_);
+
+  if (_gui_)
+    /* !!! needed by OpenCV to correctly show the images using cv::imshow !!! */
+    cv::waitKey(1);
 }
 
 //}
@@ -131,6 +179,11 @@ void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::Timer
 
   ros::Time time_now = ros::Time::now();
 
+  // Because got_image_, time_last_image_, got_camera_info_ and time_last_camera_info_ are accessed
+  // from multiple threads, this mutex is needed to prevent data races.
+  // mutex_counters_ is released in the destructor of lock when lock goes out of scope (see below)
+  std::scoped_lock lock(mutex_counters_);
+
   /* check whether camera image msgs are coming */
   if (!got_image_) {
     ROS_WARN_THROTTLE(1.0, "Not received camera image since node launch.");
@@ -144,10 +197,13 @@ void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::Timer
   if (!got_camera_info_) {
     ROS_WARN_THROTTLE(1.0, "Not received camera info msg since node launch.");
   } else {
-    if ((time_now - time_last_image_).toSec() > 1.0) {
+    if ((time_now - time_last_camera_info_).toSec() > 1.0) {
       ROS_WARN_THROTTLE(1.0, "Not received camera info msg for %f sec.", (time_now - time_last_camera_info_).toSec());
     }
   }
+
+  // Here, the variable lock goes out of scope and mutex_counters_ is automatically released (unlocked)
+  // in its destructor.
 }
 
 //}
@@ -174,48 +230,156 @@ void EdgeDetect::publishImageNumber(uint64_t count) {
 
 //}
 
-/* doSimpleImageProcessing() //{ */
+/* publishOpenCVImage() method //{ */
+void EdgeDetect::publishOpenCVImage(cv::InputArray image, const std_msgs::Header& header, const std::string& encoding, ros::Publisher pub)
+{
+  // Prepare a cv_bridge image to be converted to the ROS message
+  cv_bridge::CvImage bridge_image_out;
 
-void EdgeDetect::doSimpleImageProcessing(int, void*) {
+  // Set the desired message header (time stamp and frame id)
+  bridge_image_out.header = header;
 
-  // !!!!
-  // BASED ON EXAMPLE http://docs.opencv.org/2.4/doc/tutorials/imgproc/imgtrans/canny_detector/canny_detector.html
-  cv::Mat src_gray, dst, detected_edges;
+  // Copy the cv::Mat, pointing to the image
+  bridge_image_out.image = image.getMat();
+
+  // Fill out the message encoding - this tells ROS how to interpret the raw image data
+  // (see https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages)
+  bridge_image_out.encoding = encoding;
+
+  // Now convert the cv_bridge image to a ROS message
+  sensor_msgs::ImageConstPtr out_msg = bridge_image_out.toImageMsg();
+  // ... and publish the message
+  pub.publish(out_msg);
+}
+//}
+
+/* detectEdgesCanny() method //{ */
+cv::Mat EdgeDetect::detectEdgesCanny(cv::InputArray image, int low_threshold)
+{
+  // BASED ON EXAMPLE https://docs.opencv.org/3.2.0/da/d5c/tutorial_canny_detector.html
+  cv::Mat src_gray, detected_edges;
 
   // initialize some variables
-  int ratio       = 3;
-  int kernel_size = 3;
+  const int ratio       = 3;
+  const int kernel_size = 3;
 
-  {
-    std::scoped_lock lock(mutex_image_);
-
-    // Create a matrix of the same type and size as src (for dst)
-    dst.create(image_.size(), image_.type());
-
-    // Convert the image to grayscale
-    cv::cvtColor(image_, src_gray, CV_BGR2GRAY);
-  }
+  // Convert the image to grayscale
+  cv::cvtColor(image, src_gray, CV_BGR2GRAY);
 
   // Reduce noise with a kernel 3x3
   cv::blur(src_gray, detected_edges, cv::Size(3, 3));
 
   // Canny detector
-  cv::Canny(detected_edges, detected_edges, low_threshold_, low_threshold_ * ratio, kernel_size);
+  cv::Canny(detected_edges, detected_edges, low_threshold, low_threshold * ratio, kernel_size);
+
+  // Return the detected edges (not colored)
+  return detected_edges;
+}
+//}
+
+/* showEdgeImage() method //{ */
+void EdgeDetect::showEdgeImage(cv::InputArray image, cv::InputArray detected_edges)
+{
+  cv::Mat colored_edges;
+  // Create a matrix of the same type and size as src (for dst)
+  colored_edges.create(image.size(), image.type());
 
   // Using Canny's output as a mask, we display our result
-  dst = cv::Scalar::all(0);
+  colored_edges = cv::Scalar::all(0);
 
+  // copy the result
+  image.copyTo(colored_edges, detected_edges);
+
+  // show the image in gui (!the image will be displayed after calling cv::waitKey()!)
+  cv::imshow("edges", colored_edges);
+}
+//}
+
+/* projectWorldPointToImage() method //{ */
+cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Time& image_stamp, const double x, const double y, const double z)
+{
+  // cv::InputArray indicates that the variable should not be modified, but we want
+  // to draw into the image. Therefore we need to copy it.
+  cv::Mat projected_point;
+  image.copyTo(projected_point);
+
+  // If no camera info was received yet, we cannot do the backprojection, alert the user and return.
+  if (!got_camera_info_)
   {
-    std::scoped_lock lock(mutex_image_);
-
-    // copy the result
-    image_.copyTo(dst, detected_edges);
+    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: No camera info received yet, cannot backproject point to image");
+    return projected_point;
   }
 
-  // show the image
-  cv::imshow("edges", dst);
-}
+  // | --------- transform the point to the camera frame -------- |
 
+  const std::string& camera_frame = camera_model_.tfFrame();
+  geometry_msgs::Point pt3d_world; pt3d_world.x = x; pt3d_world.y = y; pt3d_world.z = z;
+  geometry_msgs::Point pt3d_cam;
+
+  // In case the transformation failed (most probably because the transofmation is not yet available),
+  // alert the user and return.
+  if (!transformPointFromWorld(pt3d_world, camera_frame, image_stamp, pt3d_cam))
+  {
+    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: Failed to tranform point from world to camera frame, cannot backproject point to image");
+    return projected_point;
+  }
+
+  // | ----------- backproject the point from 3D to 2D ---------- |
+
+  const cv::Point3d pt3d(pt3d_cam.x, pt3d_cam.y, pt3d_cam.z);
+  const cv::Point2d pt2d = camera_model_.project3dToPixel(pt3d); // this is now in rectified image coordinates
+
+  // | ----------- unrectify the 2D point coordinates ----------- |
+  
+  // This is done to correct for camera distortion. IT has no effect in simulation, where the camera model
+  // is an ideal pinhole camera, but usually has a BIG effect when using real cameras, so don't forget this part!
+  const cv::Point2d pt2d_unrec = camera_model_.unrectifyPoint(pt2d); // this is now in unrectified image coordinates
+
+  // | --------------- draw the point to the image -------------- |
+  
+  // The point will be drawn as a filled circle with the coordinates as text in the image
+  const int pt_radius = 5; // pixels
+  const cv::Scalar color(255, 0, 0); // red or blue color, depending on the pixel ordering (BGR or RGB)
+  const int pt_thickness = -1; // pixels, -1 means filled
+  cv::circle(projected_point, pt2d_unrec, pt_radius, color, pt_thickness);
+  
+  // Draw the text with the coordinates to the image
+  const std::string coord_txt = "[" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + "]";
+  const cv::Point2d txt_pos(pt2d_unrec.x + 5, pt2d_unrec.y + 5); // offset the text a bit to avoid overlap with the circle
+  const int txt_font = cv::FONT_HERSHEY_PLAIN;                   // some default OpenCV font
+  const double txt_font_scale = 1.0;
+  cv::putText(projected_point, coord_txt, txt_pos, txt_font, txt_font_scale, color);
+
+  return projected_point;
+}
+//}
+
+/* getTransform() method //{ */
+bool EdgeDetect::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& stamp, geometry_msgs::TransformStamped& transform_out)
+{
+  try
+  {
+    transform_out = tf_buffer_.lookupTransform(to_frame, from_frame, stamp, ros::Duration(0.01));
+    return true;
+  }
+  // This catch is necessary to be able to distinguish when the transform lookup failed, which is quite probable in realistic situations!
+  catch (tf2::TransformException& ex)
+  {
+    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: Error during transform from \"%s\" frame to \"%s\" frame.\n\tMSG: %s", from_frame.c_str(), to_frame.c_str(), ex.what());
+    return false;
+  }
+}
+//}
+
+/* transformPointFromWorld() method //{ */
+bool EdgeDetect::transformPointFromWorld(const geometry_msgs::Point& point, const std::string& to_frame, const ros::Time& stamp, geometry_msgs::Point& point_out)
+{
+  geometry_msgs::TransformStamped transform;
+  if (!getTransform(world_frame_id_, to_frame, stamp, transform))
+    return false;
+  tf2::doTransform(point, point_out, transform);
+  return true;
+}
 //}
 
 }  // namespace vision_example
