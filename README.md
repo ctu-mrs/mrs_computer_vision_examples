@@ -52,6 +52,7 @@ The undistort/distort steps can then be skipped, but it's usually better practic
 2) Initialize the `image_geometry::PinholeCameraModel` using the parameters from step 1.
 3) Undistort the point coordinates. Use the `image_geometry::PinholeCameraModel::rectifyPoint()` method.
 4) Project the undistorted point coordinates to 3D. Use `image_geometry::PinholeCameraModel::projectPixelTo3dRay()`.
+
 Note that the result is a 3D vector in the camera optical coordinate frame.
 To get a 3D point, you need to somehow estimate the distance of the point from the camera center.
 It may also be necessary to transform the point to other coordinate frame (see the next section for how to use the ROS TF2 framework).
@@ -82,5 +83,6 @@ To actually do the transformation, you need to follow these steps:
 1) Try to lookup the transform using `tf2_ros::Buffer::lookupTransform()` and a `try` block.
 2) Catch a potential `tf2::TransformException` exception using a `catch` block. If exception is caught, alert the user and abort the transformation process.
 3) If the lookup was successful, do the actual transformation using `tf2::doTransform()`.
+
 It is important to note that to use the `tf2::doTransform()` method, you must add the corresponding lib to the `CMakeLists.txt` and `package.xml` files.
 For example if you want to transform messages from the `geometry_msgs` package, you need to include `tf2_geometry_msgs` in the `find_package()` function in the `CMakeLists.txt` file and as a dependency in the `package.xml` file, and include the `<tf2_geometry_msgs/tf2_geometry_msgs.h>` header in the corresponding C++ file.
