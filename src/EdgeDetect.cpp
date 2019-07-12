@@ -1,4 +1,4 @@
-#include "EdgeDetect.h"
+#include "vision_example/EdgeDetect.h"
 
 /* every nodelet must include macros which export the class as a nodelet plugin */
 #include <pluginlib/class_list_macros.h>
@@ -105,23 +105,19 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
     time_last_image_ = ros::Time::now();
   }
 
-  std_msgs::Header msg_header;
-  /* copy the image message to a member variable */
-  {
-    // toCvShare avoids copying the image data and instead copies only the (smart) constpointer
-    // to the data. Then, the data cannot be changed (it is potentially shared between multiple nodes) and
-    // it is automatically freed when all pointers to it are released. If you want to modify the image data,
-    // use toCvCopy (see https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages),
-    // or copy the image data using cv::Mat::copyTo() method.
-    // Adittionally, toCvShare and toCvCopy will convert the input image to the specified encoding
-    // if it differs from the one in the message. Try to be consistent in what encodings you use throughout the code.
-    bridge_image_ptr_ = cv_bridge::toCvShare(msg, color_encoding);
-    msg_header = msg->header;
+  // toCvShare avoids copying the image data and instead copies only the (smart) constpointer
+  // to the data. Then, the data cannot be changed (it is potentially shared between multiple nodes) and
+  // it is automatically freed when all pointers to it are released. If you want to modify the image data,
+  // use toCvCopy (see https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages),
+  // or copy the image data using cv::Mat::copyTo() method.
+  // Adittionally, toCvShare and toCvCopy will convert the input image to the specified encoding
+  // if it differs from the one in the message. Try to be consistent in what encodings you use throughout the code.
+  const cv_bridge::CvImageConstPtr bridge_image_ptr = cv_bridge::toCvShare(msg, color_encoding);
+  const std_msgs::Header msg_header = msg->header;
 
-    /* show the image in gui (!the image will be displayed after calling cv::waitKey()!) */
-    if (_gui_)
-      cv::imshow("original", bridge_image_ptr_->image);
-  }
+  /* show the image in gui (!the image will be displayed after calling cv::waitKey()!) */
+  if (_gui_)
+    cv::imshow("original", bridge_image_ptr->image);
 
   /* output a text about it */
   ROS_INFO_THROTTLE(1, "[EdgeDetect]: Total of %u images received so far", (unsigned int)image_counter_);
@@ -129,11 +125,11 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
   // | ---------- Detect edges in the image using Canny --------- |
 
   /* find edges in the image */
-  const auto detected_edges = EdgeDetect::detectEdgesCanny(bridge_image_ptr_->image, low_threshold_);
+  const auto detected_edges = EdgeDetect::detectEdgesCanny(bridge_image_ptr->image, low_threshold_);
 
   /* show the edges image in gui */
   if (_gui_)
-    EdgeDetect::showEdgeImage(bridge_image_ptr_->image, detected_edges);
+    EdgeDetect::showEdgeImage(bridge_image_ptr->image, detected_edges);
 
   /* publish the image with the detected edges */
   EdgeDetect::publishOpenCVImage(detected_edges, msg_header, grayscale_encoding, pub_edges_);
@@ -141,7 +137,7 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg)
   // | ----------- Project a world point to the image ----------- |
 
   /* find edges in the image */
-  const auto projection_image = EdgeDetect::projectWorldPointToImage(bridge_image_ptr_->image, msg_header.stamp, 0, 0, 0);
+  const auto projection_image = EdgeDetect::projectWorldPointToImage(bridge_image_ptr->image, msg_header.stamp, 0, 0, 0);
 
   /* show the projection image in gui (!the image will be displayed after calling cv::waitKey()!) */
   if (_gui_)

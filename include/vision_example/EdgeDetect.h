@@ -65,7 +65,6 @@ namespace vision_example
 
     void                        callbackImage(const sensor_msgs::ImageConstPtr& msg);
     image_transport::Subscriber sub_image_;
-    cv_bridge::CvImageConstPtr  bridge_image_ptr_;
 
     void                               callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg);
     ros::Subscriber                    sub_camera_info_;
