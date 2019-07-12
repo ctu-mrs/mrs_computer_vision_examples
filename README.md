@@ -47,7 +47,7 @@ These are mostly obtained using offline calibration and the convenient ROS calib
 Some cameras (such as cameras from the Realsense family) publish already undistorted images.
 The undistort/distort steps can then be skipped, but it's usually better practice to leave them in in case a different camera was used.
 
-#### Using `image_geometry::PinholeCameraModel` to project a 2D point to 3D has more or less the following steps:
+**Using `image_geometry::PinholeCameraModel` to project a 2D point to 3D has more or less the following steps:**
 1) Obtain parameters of the camera to be used. Usually, a camera will publish these parameters on the corresponding `camera_info` topic.
 2) Initialize the `image_geometry::PinholeCameraModel` using the parameters from step 1.
 3) Undistort the point coordinates. Use the `image_geometry::PinholeCameraModel::rectifyPoint()` method.
@@ -56,7 +56,7 @@ Note that the result is a 3D vector in the camera optical coordinate frame.
 To get a 3D point, you need to somehow estimate the distance of the point from the camera center.
 It may also be necessary to transform the point to other coordinate frame (see the next section for how to use the ROS TF2 framework).
  
-#### Using `image_geometry::PinholeCameraModel` to backproject a 3D point to the image (this is demonstrated in the `EdgeDetect` nodelet):
+**Using `image_geometry::PinholeCameraModel` to backproject a 3D point to the image (this is demonstrated in the `EdgeDetect` nodelet):**
 1) Obtain parameters of the camera to be used. Usually, a camera will publish these parameters on the corresponding `camera_info` topic.
 2) Initialize the `image_geometry::PinholeCameraModel` using the parameters from step 1.
 2) Transform the 3D point to the camera optical coordinate frame. Use the ROS TF2 framework as described in the next section.
@@ -64,11 +64,23 @@ It may also be necessary to transform the point to other coordinate frame (see t
 4) Apply camera distortion. Use the `image_geometry::PinholeCameraModel::unrectifyPoint()` method.
 
 ### Using the ROS TF2 framework for transforming stuff between different coordinate frames
-*Reference documentation: http://wiki.ros.org/tf2_ros*
+*Reference documentation: [TF2 docs](http://wiki.ros.org/tf2_ros), [tutorial](http://wiki.ros.org/tf2/Tutorials/Introduction%20to%20tf2)*
 
 First off, you can use `rosrun rqt_tf_tree rqt_tf_tree` or `rosrun tf view_frames && zathura frames.pdf && rm frames.pdf && rm frames.gv` (the first one is recommended) to inspect frames, which are currently available in `roscore`, and their mutual connections.
+To observe a transformation between two specific frames in real-time, use `rosrun tf tf_echo [reference_frame] [target_frame]`.
 By restarting `roscore`, the frames will reset.
 Sometimes, RViz will be stubborn and refuse to use frames, which exist and are correctly connected (you can check that with the abovementioned command).
 The solution is usually clicking the `Reset` button in RViz or restarting it.
 
 If you need to publish a static transformation between two frames (typically from the UAV frame to the camera optical frame), you can use `rosrun tf2_ros static_transform_publisher dx dy dz yaw pitch roll frame_id child_frame_id`, where `frame_id` would typically be the UAV frame (i.e. `fcu_uavX`) and  `child_frame_id` would be e.g. the camera frame.
+
+To use transformations from your code, you need to have a `tf2_ros::Buffer` object, which buffers the transformations and provides lookups between frames at specific time-stamps.
+Aditionally, you need a `tf2_ros::TransformListener`, which listens to the transformation messages and fills the `tf2_ros::Buffer`.
+Because the `tf2_ros::TransformListener` class does not implement the assignment operator and it cannot be initialized in the constructor of a nodelet, the usual practice is to have a smart-pointer member variable (i.e. `std::unique_ptr<tf2_ros::TransformListener>`) and instantiate the object in the `OnInit()` method of the nodelet class using `std::make_unique<tf2_ros::TransformListener>()`.
+
+To actually do the transformation, you need to follow these steps:
+1) Try to lookup the transform using `tf2_ros::Buffer::lookupTransform()` and a `try` block.
+2) Catch a potential `tf2::TransformException` exception using a `catch` block. If exception is caught, alert the user and abort the transformation process.
+3) If the lookup was successful, do the actual transformation using `tf2::doTransform()`.
+It is important to note that to use the `tf2::doTransform()` method, you must add the corresponding lib to the `CMakeLists.txt` and `package.xml` files.
+For example if you want to transform messages from the `geometry_msgs` package, you need to include `tf2_geometry_msgs` in the `find_package()` function in the `CMakeLists.txt` file and as a dependency in the `package.xml` file, and include the `<tf2_geometry_msgs/tf2_geometry_msgs.h>` header in the corresponding C++ file.
