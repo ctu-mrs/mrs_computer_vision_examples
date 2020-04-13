@@ -1,4 +1,4 @@
-#include "vision_example/EdgeDetect.h"
+#include <vision_example/EdgeDetect.h>
 
 /* every nodelet must include macros which export the class as a nodelet plugin */
 #include <pluginlib/class_list_macros.h>
@@ -23,18 +23,30 @@ void EdgeDetect::onInit() {
 
   // | ------------------- load ros parameters ------------------ |
   /* (mrs_lib implementation checks whether the parameter was loaded or not) */
-  mrs_lib::ParamLoader param_loader(nh, "EdgeDetect");
-  param_loader.load_param("UAV_NAME", _uav_name_);
-  param_loader.load_param("gui", _gui_);
-  param_loader.load_param("rate/publish", _rate_timer_publish_);
-  param_loader.load_param("rate/check_subscribers", _rate_timer_check_subscribers_);
-  param_loader.load_param("canny_threshold", low_threshold_);
-  param_loader.load_param("world_frame_id", world_frame_id_);
-  param_loader.load_param("world_point/x", world_point_x_);
-  param_loader.load_param("world_point/y", world_point_y_);
-  param_loader.load_param("world_point/z", world_point_z_);
 
-  /* create windows */
+  mrs_lib::ParamLoader param_loader(nh, "EdgeDetect");
+
+  param_loader.loadParam("UAV_NAME", _uav_name_);
+  param_loader.loadParam("gui", _gui_);
+  param_loader.loadParam("rate/publish", _rate_timer_publish_);
+  param_loader.loadParam("rate/check_subscribers", _rate_timer_check_subscribers_);
+  param_loader.loadParam("canny_threshold", low_threshold_);
+  param_loader.loadParam("world_frame_id", world_frame_id_);
+  param_loader.loadParam("world_point/x", world_point_x_);
+  param_loader.loadParam("world_point/y", world_point_y_);
+  param_loader.loadParam("world_point/z", world_point_z_);
+
+  if (!param_loader.loadedSuccessfully()) {
+    ROS_ERROR("[WaypointFlier]: failed to load non-optional parameters!");
+    ros::shutdown();
+  }
+
+  // | --------------------- tf transformer --------------------- |
+
+  transformer_ = mrs_lib::Transformer("EdgeDetect", _uav_name_);
+
+  // | --------------------------- gui -------------------------- |
+
   if (_gui_) {
 
     int flags = cv::WINDOW_NORMAL | cv::WINDOW_FREERATIO | cv::WINDOW_GUI_EXPANDED;
@@ -160,33 +172,13 @@ void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::Timer
   if (!is_initialized_)
     return;
 
-  ros::Time time_now = ros::Time::now();
-
-  // Because got_image_, time_last_image_, got_camera_info_ and time_last_camera_info_ are accessed
-  // from multiple threads, this mutex is needed to prevent data races.
-  // mutex_counters_ is released in the destructor of lock when lock goes out of scope (see below)
-  std::scoped_lock lock(mutex_counters_);
-
-  /* check whether camera image msgs are coming */
   if (!got_image_) {
     ROS_WARN_THROTTLE(1.0, "Not received camera image since node launch.");
-  } else {
-    if ((time_now - time_last_image_).toSec() > 1.0) {
-      ROS_WARN_THROTTLE(1.0, "Not received camera image msg for %f sec.", (time_now - time_last_image_).toSec());
-    }
   }
 
-  /* check whether camera info msgs are coming */
   if (!got_camera_info_) {
     ROS_WARN_THROTTLE(1.0, "Not received camera info msg since node launch.");
-  } else {
-    if ((time_now - time_last_camera_info_).toSec() > 1.0) {
-      ROS_WARN_THROTTLE(1.0, "Not received camera info msg for %f sec.", (time_now - time_last_camera_info_).toSec());
-    }
   }
-
-  // Here, the variable lock goes out of scope and mutex_counters_ is automatically released (unlocked)
-  // in its destructor.
 }
 //}
 
@@ -287,23 +279,30 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
 
   // | --------- transform the point to the camera frame -------- |
 
-  const std::string&   camera_frame = camera_model_.tfFrame();
-  geometry_msgs::Point pt3d_world;
-  pt3d_world.x = x;
-  pt3d_world.y = y;
-  pt3d_world.z = z;
-  geometry_msgs::Point pt3d_cam;
 
-  // In case the transformation failed (most probably because the transofmation is not yet available),
-  // alert the user and return.
-  if (!transformPointFromWorld(pt3d_world, camera_frame, image_stamp, pt3d_cam)) {
+  geometry_msgs::PoseStamped pt3d_world;
+  pt3d_world.header.frame_id = _uav_name_ + "/" + world_frame_id_;
+  pt3d_world.header.stamp    = ros::Time::now();
+  pt3d_world.pose.position.x = x;
+  pt3d_world.pose.position.y = y;
+  pt3d_world.pose.position.z = z;
+
+  std::string camera_frame = camera_model_.tfFrame();
+
+  auto ret = transformer_.transformSingle(camera_frame, pt3d_world);
+
+  geometry_msgs::PoseStamped pt3d_cam;
+
+  if (ret) {
+    pt3d_cam = ret.value();
+  } else {
     ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: Failed to tranform point from world to camera frame, cannot backproject point to image");
     return projected_point;
   }
 
   // | ----------- backproject the point from 3D to 2D ---------- |
 
-  const cv::Point3d pt3d(pt3d_cam.x, pt3d_cam.y, pt3d_cam.z);
+  const cv::Point3d pt3d(pt3d_cam.pose.position.x, pt3d_cam.pose.position.y, pt3d_cam.pose.position.z);
   const cv::Point2d pt2d = camera_model_.project3dToPixel(pt3d);  // this is now in rectified image coordinates
 
   // | ----------- unrectify the 2D point coordinates ----------- |
@@ -328,34 +327,6 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
   cv::putText(projected_point, coord_txt, txt_pos, txt_font, txt_font_scale, color);
 
   return projected_point;
-}
-//}
-
-/* getTransform() method //{ */
-bool EdgeDetect::getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& stamp,
-                              geometry_msgs::TransformStamped& transform_out) {
-  try {
-    transform_out = tf_buffer_.lookupTransform(to_frame, from_frame, stamp, ros::Duration(0.01));
-    return true;
-  }
-  // This catch is necessary to be able to distinguish when the transform lookup failed, which is quite probable in realistic situations!
-  catch (tf2::TransformException& ex) {
-    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: Error during transform from \"%s\" frame to \"%s\" frame.\n\tMSG: %s", from_frame.c_str(), to_frame.c_str(),
-                      ex.what());
-    return false;
-  }
-}
-//}
-
-/* transformPointFromWorld() method //{ */
-bool EdgeDetect::transformPointFromWorld(const geometry_msgs::Point& point, const std::string& to_frame, const ros::Time& stamp,
-                                         geometry_msgs::Point& point_out) {
-  geometry_msgs::TransformStamped transform;
-  if (!getTransform(_uav_name_ + "/" + world_frame_id_, to_frame, stamp, transform)) {
-    return false;
-  }
-  tf2::doTransform(point, point_out, transform);
-  return true;
 }
 //}
 

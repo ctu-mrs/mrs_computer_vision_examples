@@ -39,7 +39,8 @@
 #include <image_geometry/pinhole_camera_model.h>
 
 /* custom helper functions from our library */
-#include <mrs_lib/ParamLoader.h>
+#include <mrs_lib/param_loader.h>
+#include <mrs_lib/transformer.h>
 
 //}
 
@@ -61,6 +62,10 @@ private:
   bool _gui_ = true;
 
   std::string _uav_name_;
+
+  // | --------------------- MRS transformer -------------------- |
+
+  mrs_lib::Transformer transformer_;
 
   // | ---------------------- msg callbacks --------------------- |
 
@@ -116,9 +121,6 @@ private:
 
   void publishOpenCVImage(cv::InputArray detected_edges, const std_msgs::Header& header, const std::string& encoding, const image_transport::Publisher& pub);
   void publishImageNumber(uint64_t count);
-
-  bool transformPointFromWorld(const geometry_msgs::Point& point, const std::string& to_frame, const ros::Time& stamp, geometry_msgs::Point& point_out);
-  bool getTransform(const std::string& from_frame, const std::string& to_frame, const ros::Time& stamp, geometry_msgs::TransformStamped& transform_out);
 };
 //}
 
