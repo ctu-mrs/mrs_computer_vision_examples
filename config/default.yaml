@@ -2,7 +2,7 @@
 canny_threshold: 70
 
 # coordinates of the point, which will be backprojected to the camera image from the specified frame
-world_frame_id: "local_origin"
+world_frame_id: "gps_origin"
 world_point:
   x: 0.0
   y: 0.0
