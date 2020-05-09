@@ -1,4 +1,4 @@
-# Vision template
+# MRS ROS Vision example
 
 This package was created as an example of how to use OpenCV and write packages for image processing or computer vision.
 For a more general package example, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
