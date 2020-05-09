@@ -1,7 +1,7 @@
 # Vision template
 
 This package was created as an example of how to use OpenCV and write packages for image processing or computer vision.
-For a more general package example, see https://mrs.felk.cvut.cz/gitlab/uav/examples/waypoint_flier.
+For a more general package example, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
 
 ## Example features
 * Subscribing to camera topic (using ImageTransport, which is agnostic to the image compression etc.)
@@ -10,12 +10,12 @@ For a more general package example, see https://mrs.felk.cvut.cz/gitlab/uav/exam
 * Basic OpenCV drawing functions
 * Using TF2 to transform points between frames
 * Backprojection of 3D points to the camera image
-* Other features, which overlap with the [waypoint_flier](https://mrs.felk.cvut.cz/gitlab/uav/examples/waypoint_flier) template
+* Other features, which overlap with the [waypoint_flier](https://github.com/ctu-mrs/example_ros_uav) template
 
 ## Coding practices
 
 Coding practices, related to packages working with images, are described here.
-For a more detailed description of general good programming practices and more, see https://mrs.felk.cvut.cz/gitlab/uav/examples/waypoint_flier.
+For a more detailed description of general good programming practices and more, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
 
 ### Using `cv_bridge::toCvShare()` or `cv_bridge::toCvCopy()` for converting between `sensor_msgs::Image` and `cv::Mat`
 *Reference documentation: [C++ API docs](http://docs.ros.org/melodic/api/cv_bridge/html/c++/), [example usage](https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages)*
