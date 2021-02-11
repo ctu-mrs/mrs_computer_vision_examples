@@ -15,7 +15,8 @@ For a more general package example, see [https://github.com/ctu-mrs/example_ros_
 ## Coding practices
 
 Coding practices, related to packages working with images, are described here.
-For a more detailed description of general good programming practices and more, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
+For a more detailed description of good programming practices in the context of ROS, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
+Also check out our general [C++ good/bad coding practices tutorial](https://ctu-mrs.github.io/docs/introduction/c_to_cpp.html).
 
 ### Using `cv_bridge::toCvShare()` or `cv_bridge::toCvCopy()` for converting between `sensor_msgs::Image` and `cv::Mat`
 *Reference documentation: [C++ API docs](http://docs.ros.org/melodic/api/cv_bridge/html/c++/), [example usage](https://wiki.ros.org/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages)*
