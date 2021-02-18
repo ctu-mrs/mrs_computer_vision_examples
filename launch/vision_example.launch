@@ -4,17 +4,18 @@
   <arg name="UAV_NAME" default="$(env UAV_NAME)" />
   <arg name="RUN_TYPE" default="$(env RUN_TYPE)" />
 
+  <!-- set to false if the nodelet should run under an external nodelet manager -->
   <arg name="standalone" default="true" />
 
-    <!-- allows disabling the gui from command line -->
+  <!-- allows disabling the gui from command line -->
   <arg name="gui" default="true" />
 
-    <!-- will it run using GNU debugger? -->
+  <!-- will it run using GNU debugger? -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix_debug" value=""/>
   <arg     if="$(arg debug)" name="launch_prefix_debug" value="debug_roslaunch"/>
 
-    <!-- will it run as standalone nodelet or using a nodelet manager? -->
+  <!-- will it run as standalone nodelet or using a nodelet manager? -->
   <arg name="manager" default="$(arg UAV_NAME)_edge_detector_manager" />
   <arg     if="$(arg standalone)" name="nodelet" value="standalone"/>
   <arg unless="$(arg standalone)" name="nodelet" value="load"/>
@@ -32,15 +33,15 @@
 
       <param name="UAV_NAME" type="string" value="$(arg UAV_NAME)"/>
 
-        <!-- ROS parameters config file -->
+      <!-- ROS parameters config file -->
       <rosparam file="$(find vision_example)/config/default.yaml" />
       <rosparam file="$(find vision_example)/config/$(arg RUN_TYPE).yaml" />
 
-        <!-- Subscribers -->
+      <!-- Subscribers (note that the topic names will also be remapped using the namespace as a prefix) -->
       <remap from="~image_in" to="mobius_front/image_raw" />
       <remap from="~camera_info_in" to="mobius_front/camera_info" />
 
-        <!-- Publishers -->
+      <!-- Publishers (note that the topic names will also be remapped using the namespace as a prefix) -->
       <remap from="~test_publisher" to="~image_number" />
 
     </node>
