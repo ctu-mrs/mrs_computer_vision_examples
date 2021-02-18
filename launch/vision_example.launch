@@ -22,7 +22,7 @@
   <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
   <arg unless="$(arg standalone)" name="nodelet_manager" value="$(arg manager)"/>
 
-  <!-- Namespace - all topics and parameters will be remapped using this namespace as a prefix (eg.: "/image_in" to "/uav1/image_in") -->
+  <!-- Namespace - all topics and parameters will be remapped using this namespace as a prefix (eg.: "/vision_example/image_in" to "/uav1/vision_example/image_in") -->
   <group ns="$(arg UAV_NAME)">
 
     <!-- EdgeDetect nodelet -->
