@@ -2,7 +2,7 @@
 <package format="2">
 
   <name>vision_example</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>Detects edges using Canny detector</description>
 
   <maintainer email="matej.petrlik@fel.cvut.cz">Matej Petrlik</maintainer>
