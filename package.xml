@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>pc_camera_projector</name>
+  <version>1.0.0</version>
+  <description>Pointcloud camera projector</description>
+
+  <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
+  <author email="tomas.baca@fel.cvut.cz">Tomas Baca</author>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>nodelet</depend>
+  <depend>std_msgs</depend>
+  <depend>image_transport</depend>
+  <depend>mrs_lib</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>image_geometry</depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_msgs</depend>
+
+  <export>
+    <nodelet plugin="${prefix}/nodelets.xml" />
+  </export>
+
+</package>

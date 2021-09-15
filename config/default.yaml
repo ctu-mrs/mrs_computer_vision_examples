@@ -1,0 +1,4 @@
+point_size: 1 # [px]
+
+# scales the colors
+distance_color_limit: 10.0 # [m]

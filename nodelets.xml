@@ -1,0 +1,5 @@
+<library path="lib/libPcCameraProjector">
+  <class name="pc_camera_projector/PcCameraProjector" type="pc_camera_projector::PcCameraProjector" base_class_type="nodelet::Nodelet">
+    <description>PcCameraProjector nodelet</description>
+  </class>
+</library>

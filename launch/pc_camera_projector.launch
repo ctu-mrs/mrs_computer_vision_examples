@@ -1,0 +1,34 @@
+<launch>
+
+  <arg name="standalone" default="true" />
+
+  <arg name="UAV_NAME" default="$(env UAV_NAME)" />
+
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix_debug" value=""/>
+  <arg     if="$(arg debug)" name="launch_prefix_debug" value="debug_roslaunch"/>
+
+  <!-- will it run as standalone nodelet or using a nodelet manager? -->
+  <arg     if="$(arg standalone)" name="nodelet" value="standalone"/>
+  <arg unless="$(arg standalone)" name="nodelet" value="load"/>
+  <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
+  <arg unless="$(arg standalone)" name="nodelet_manager" value=""/>
+
+  <group ns="$(arg UAV_NAME)">
+
+    <node pkg="nodelet" type="nodelet" name="pc_camera_projector" args="$(arg nodelet) pc_camera_projector/PcCameraProjector $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
+
+      <rosparam file="$(find pc_camera_projector)/config/default.yaml" />
+
+      <remap from="~image_in" to="mobius_front/image_raw" />
+      <remap from="~camera_info_in" to="mobius_front/camera_info" />
+      <!-- <remap from="~point_cloud_in" to="pcl_filter_mapping/points_processed" /> -->
+      <remap from="~point_cloud_in" to="os_cloud_nodelet/points" />
+
+      <remap from="~image_out" to="~image" />
+
+    </node>
+
+  </group>
+
+</launch>
