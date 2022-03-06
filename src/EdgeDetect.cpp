@@ -62,7 +62,7 @@ private:
 
   // | --------------------- MRS transformer -------------------- |
 
-  mrs_lib::Transformer transformer_;
+  std::unique_ptr<mrs_lib::Transformer> transformer_;
 
   // | ---------------------- msg callbacks --------------------- |
 
@@ -160,7 +160,8 @@ void EdgeDetect::onInit() {
 
   // | --------------------- tf transformer --------------------- |
 
-  transformer_ = mrs_lib::Transformer("EdgeDetect", _uav_name_);
+  transformer_ = std::make_unique<mrs_lib::Transformer>("EdgeDetect");
+  transformer_->setDefaultPrefix(_uav_name_);
 
   // | --------------------------- gui -------------------------- |
 
@@ -435,7 +436,7 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
 
   std::string camera_frame = camera_model_.tfFrame();
 
-  auto ret = transformer_.transformSingle(camera_frame, pt3d_world);
+  auto ret = transformer_->transformSingle(pt3d_world, camera_frame);
 
   geometry_msgs::PoseStamped pt3d_cam;
 
