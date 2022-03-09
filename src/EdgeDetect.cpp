@@ -162,6 +162,7 @@ void EdgeDetect::onInit() {
 
   transformer_ = std::make_unique<mrs_lib::Transformer>("EdgeDetect");
   transformer_->setDefaultPrefix(_uav_name_);
+  transformer_->retryLookupNewest(true);
 
   // | --------------------------- gui -------------------------- |
 
