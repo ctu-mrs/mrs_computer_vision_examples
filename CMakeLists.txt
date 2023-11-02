@@ -4,8 +4,9 @@ project(vision_example)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(catkin REQUIRED COMPONENTS
+set(CATKIN_DEPENDENCIES
   image_transport
+  cmake_modules
   roscpp
   std_msgs
   cv_bridge
@@ -13,24 +14,58 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   image_geometry
   mrs_lib
-)
+  )
+
+set(LIBRARIES
+  EdgeDetector
+  )
+
+find_package(catkin REQUIRED COMPONENTS
+  ${CATKIN_DEPENDENCIES}
+  )
 
 find_package(OpenCV REQUIRED)
 
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES EdgeDetect
-  CATKIN_DEPENDS roscpp mrs_lib image_transport std_msgs
-)
+  LIBRARIES ${LIBRARIES}
+  CATKIN_DEPENDS ${CATKIN_DEPENDENCIES}
+  )
 
 include_directories(include
-  include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
-)
+  )
 
-add_library(EdgeDetect src/EdgeDetect.cpp)
+# EdgeDetector
 
-add_dependencies(EdgeDetect ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_library(EdgeDetector
+  src/edge_detector.cpp
+  )
 
-target_link_libraries(EdgeDetect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(EdgeDetector
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  )
+
+target_link_libraries(EdgeDetector
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  )
+
+## --------------------------------------------------------------
+## |                           Install                          |
+## --------------------------------------------------------------
+
+install(TARGETS ${LIBRARIES}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  )
+
+install(DIRECTORY launch config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )
+
+install(FILES nodelets.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )

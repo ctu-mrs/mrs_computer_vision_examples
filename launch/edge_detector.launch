@@ -1,8 +1,7 @@
 <launch>
 
   <!-- defines name of the namespace of the drone -->
-  <arg name="UAV_NAME" default="$(env UAV_NAME)" />
-  <arg name="RUN_TYPE" default="$(env RUN_TYPE)" />
+  <arg name="UAV_NAME" default="$(optenv UAV_NAME uav1)" />
 
   <!-- set to false if the nodelet should run under an external nodelet manager -->
   <arg name="standalone" default="true" />
@@ -22,11 +21,11 @@
   <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
   <arg unless="$(arg standalone)" name="nodelet_manager" value="$(arg manager)"/>
 
-  <!-- Namespace - all topics and parameters will be remapped using this namespace as a prefix (eg.: "/vision_example/image_in" to "/uav1/vision_example/image_in") -->
+  <!-- Namespace - all topics and parameters will be remapped using this namespace as a prefix (eg.: "vision_example/image_in" to "/uav1/vision_example/image_in") -->
   <group ns="$(arg UAV_NAME)">
 
     <!-- EdgeDetect nodelet -->
-    <node pkg="nodelet" type="nodelet" name="vision_example" args="$(arg nodelet) vision_example/EdgeDetect $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
+    <node pkg="nodelet" type="nodelet" name="vision_example" args="$(arg nodelet) vision_example/EdgeDetector $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
 
       <!-- Parameters loaded from launch file -->
       <param name="gui" type="bool" value="$(arg gui)"/>
@@ -34,15 +33,14 @@
       <param name="UAV_NAME" type="string" value="$(arg UAV_NAME)"/>
 
       <!-- ROS parameters config file -->
-      <rosparam file="$(find vision_example)/config/default.yaml" />
-      <rosparam file="$(find vision_example)/config/$(arg RUN_TYPE).yaml" />
+      <rosparam file="$(find vision_example)/config/vision_example.yaml" />
 
       <!-- Subscribers (note that the topic names will also be remapped using the namespace as a prefix) -->
       <remap from="~image_in" to="mobius_front/image_raw" />
       <remap from="~camera_info_in" to="mobius_front/camera_info" />
 
       <!-- Publishers (note that the topic names will also be remapped using the namespace as a prefix) -->
-      <remap from="~test_publisher" to="~image_number" />
+      <remap from="~image_number_out" to="~image_number" />
 
     </node>
 

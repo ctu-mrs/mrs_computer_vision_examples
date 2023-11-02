@@ -1,5 +1,0 @@
-<library path="lib/libEdgeDetect">
-  <class name="vision_example/EdgeDetect" type="vision_example::EdgeDetect" base_class_type="nodelet::Nodelet">
-    <description>EdgeDetect nodelet</description>
-  </class>
-</library>

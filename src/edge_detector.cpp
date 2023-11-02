@@ -43,9 +43,9 @@
 namespace vision_example
 {
 
-/* class EdgeDetect //{ */
+/* class EdgeDetector //{ */
 
-class EdgeDetect : public nodelet::Nodelet {
+class EdgeDetector : public nodelet::Nodelet {
 
 public:
   /* onInit() is called when nodelet is launched (similar to main() in regular node) */
@@ -124,7 +124,7 @@ private:
 
 /* onInit() method //{ */
 
-void EdgeDetect::onInit() {
+void EdgeDetector::onInit() {
 
   // | ---------------- set my booleans to false ---------------- |
   // but remember, always set them to their default value in the header file
@@ -141,7 +141,7 @@ void EdgeDetect::onInit() {
   // | ------------------- load ros parameters ------------------ |
   /* (mrs_lib implementation checks whether the parameter was loaded or not) */
 
-  mrs_lib::ParamLoader param_loader(nh, "EdgeDetect");
+  mrs_lib::ParamLoader param_loader(nh, "EdgeDetector");
 
   param_loader.loadParam("UAV_NAME", _uav_name_);
   param_loader.loadParam("gui", _gui_);
@@ -160,7 +160,7 @@ void EdgeDetect::onInit() {
 
   // | --------------------- tf transformer --------------------- |
 
-  transformer_ = std::make_unique<mrs_lib::Transformer>("EdgeDetect");
+  transformer_ = std::make_unique<mrs_lib::Transformer>("EdgeDetector");
   transformer_->setDefaultPrefix(_uav_name_);
   transformer_->retryLookupNewest(true);
 
@@ -185,8 +185,8 @@ void EdgeDetect::onInit() {
   tf_listener_ptr_ = std::make_unique<tf2_ros::TransformListener>(tf_buffer_);
 
   // | ----------------- initialize subscribers ----------------- |
-  sub_image_       = it.subscribe("image_in", 1, &EdgeDetect::callbackImage, this);
-  sub_camera_info_ = nh.subscribe("camera_info_in", 1, &EdgeDetect::callbackCameraInfo, this, ros::TransportHints().tcpNoDelay());
+  sub_image_       = it.subscribe("image_in", 1, &EdgeDetector::callbackImage, this);
+  sub_camera_info_ = nh.subscribe("camera_info_in", 1, &EdgeDetector::callbackCameraInfo, this, ros::TransportHints().tcpNoDelay());
 
   // | ------------------ initialize publishers ----------------- |
   pub_test_       = nh.advertise<std_msgs::UInt64>("test_publisher", 1);
@@ -194,9 +194,9 @@ void EdgeDetect::onInit() {
   pub_projection_ = it.advertise("projected_point", 1);
 
   // | -------------------- initialize timers ------------------- |
-  timer_check_subscribers_ = nh.createTimer(ros::Rate(_rate_timer_check_subscribers_), &EdgeDetect::callbackTimerCheckSubscribers, this);
+  timer_check_subscribers_ = nh.createTimer(ros::Rate(_rate_timer_check_subscribers_), &EdgeDetector::callbackTimerCheckSubscribers, this);
 
-  ROS_INFO_ONCE("[EdgeDetect]: initialized");
+  ROS_INFO_ONCE("[EdgeDetector]: initialized");
 
   is_initialized_ = true;
 }
@@ -207,7 +207,7 @@ void EdgeDetect::onInit() {
 
 /* callbackCameraInfo() method //{ */
 
-void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg) {
+void EdgeDetector::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg) {
 
   if (!is_initialized_) {
     return;
@@ -224,7 +224,7 @@ void EdgeDetect::callbackCameraInfo(const sensor_msgs::CameraInfoConstPtr& msg) 
 
 /* callbackImage() method //{ */
 
-void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
+void EdgeDetector::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
 
   if (!is_initialized_) {
     return;
@@ -257,25 +257,25 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
   }
 
   /* output a text about it */
-  ROS_INFO_THROTTLE(1, "[EdgeDetect]: Total of %u images received so far", (unsigned int)image_counter_);
+  ROS_INFO_THROTTLE(1, "[EdgeDetector]: Total of %u images received so far", (unsigned int)image_counter_);
 
   // | ---------- Detect edges in the image using Canny --------- |
 
   /* find edges in the image */
-  const auto detected_edges = EdgeDetect::detectEdgesCanny(bridge_image_ptr->image, low_threshold_);
+  const auto detected_edges = EdgeDetector::detectEdgesCanny(bridge_image_ptr->image, low_threshold_);
 
   /* show the edges image in gui */
   if (_gui_) {
-    EdgeDetect::showEdgeImage(bridge_image_ptr->image, detected_edges);
+    EdgeDetector::showEdgeImage(bridge_image_ptr->image, detected_edges);
   }
 
   /* publish the image with the detected edges */
-  EdgeDetect::publishOpenCVImage(detected_edges, msg_header, grayscale_encoding, pub_edges_);
+  EdgeDetector::publishOpenCVImage(detected_edges, msg_header, grayscale_encoding, pub_edges_);
 
   // | ----------- Project a world point to the image ----------- |
 
   /* find edges in the image */
-  const auto projection_image = EdgeDetect::projectWorldPointToImage(bridge_image_ptr->image, msg_header.stamp, 0, 0, 0);
+  const auto projection_image = EdgeDetector::projectWorldPointToImage(bridge_image_ptr->image, msg_header.stamp, 0, 0, 0);
 
   /* show the projection image in gui (!the image will be displayed after calling cv::waitKey()!) */
   if (_gui_) {
@@ -283,10 +283,10 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
   }
 
   /* publish the image with the detected edges */
-  EdgeDetect::publishOpenCVImage(projection_image, msg_header, color_encoding, pub_projection_);
+  EdgeDetector::publishOpenCVImage(projection_image, msg_header, color_encoding, pub_projection_);
 
   /* publish image count */
-  EdgeDetect::publishImageNumber(image_counter_);
+  EdgeDetector::publishImageNumber(image_counter_);
 
   if (_gui_) {
     /* !!! needed by OpenCV to correctly show the images using cv::imshow !!! */
@@ -300,7 +300,7 @@ void EdgeDetect::callbackImage(const sensor_msgs::ImageConstPtr& msg) {
 
 /* callbackTimerCheckSubscribers() method //{ */
 
-void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::TimerEvent& te) {
+void EdgeDetector::callbackTimerCheckSubscribers([[maybe_unused]] const ros::TimerEvent& te) {
 
   if (!is_initialized_) {
     return;
@@ -321,7 +321,7 @@ void EdgeDetect::callbackTimerCheckSubscribers([[maybe_unused]] const ros::Timer
 
 /* publishImageNumber() method //{ */
 
-void EdgeDetect::publishImageNumber(uint64_t count) {
+void EdgeDetector::publishImageNumber(uint64_t count) {
 
   std_msgs::UInt64 message;
 
@@ -341,7 +341,8 @@ void EdgeDetect::publishImageNumber(uint64_t count) {
 
 /* publishOpenCVImage() method //{ */
 
-void EdgeDetect::publishOpenCVImage(cv::InputArray image, const std_msgs::Header& header, const std::string& encoding, const image_transport::Publisher& pub) {
+void EdgeDetector::publishOpenCVImage(cv::InputArray image, const std_msgs::Header& header, const std::string& encoding,
+                                      const image_transport::Publisher& pub) {
 
   // Prepare a cv_bridge image to be converted to the ROS message
   cv_bridge::CvImage bridge_image_out;
@@ -366,7 +367,7 @@ void EdgeDetect::publishOpenCVImage(cv::InputArray image, const std_msgs::Header
 
 /* detectEdgesCanny() method //{ */
 
-cv::Mat EdgeDetect::detectEdgesCanny(cv::InputArray image, int low_threshold) {
+cv::Mat EdgeDetector::detectEdgesCanny(cv::InputArray image, int low_threshold) {
 
   // BASED ON EXAMPLE https://docs.opencv.org/3.2.0/da/d5c/tutorial_canny_detector.html
   cv::Mat src_gray, detected_edges;
@@ -392,7 +393,7 @@ cv::Mat EdgeDetect::detectEdgesCanny(cv::InputArray image, int low_threshold) {
 
 /* showEdgeImage() method //{ */
 
-void EdgeDetect::showEdgeImage(cv::InputArray image, cv::InputArray detected_edges) {
+void EdgeDetector::showEdgeImage(cv::InputArray image, cv::InputArray detected_edges) {
 
   cv::Mat colored_edges;
 
@@ -413,7 +414,7 @@ void EdgeDetect::showEdgeImage(cv::InputArray image, cv::InputArray detected_edg
 
 /* projectWorldPointToImage() method //{ */
 
-cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Time& image_stamp, const double x, const double y, const double z) {
+cv::Mat EdgeDetector::projectWorldPointToImage(cv::InputArray image, const ros::Time& image_stamp, const double x, const double y, const double z) {
 
   // cv::InputArray indicates that the variable should not be modified, but we want
   // to draw into the image. Therefore we need to copy it.
@@ -422,7 +423,7 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
 
   // If no camera info was received yet, we cannot do the backprojection, alert the user and return.
   if (!got_camera_info_) {
-    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: No camera info received yet, cannot backproject point to image");
+    ROS_WARN_THROTTLE(1.0, "[EdgeDetector]: No camera info received yet, cannot backproject point to image");
     return projected_point;
   }
 
@@ -444,7 +445,7 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
   if (ret) {
     pt3d_cam = ret.value();
   } else {
-    ROS_WARN_THROTTLE(1.0, "[EdgeDetect]: Failed to tranform point from world to camera frame, cannot backproject point to image");
+    ROS_WARN_THROTTLE(1.0, "[EdgeDetector]: Failed to tranform point from world to camera frame, cannot backproject point to image");
     return projected_point;
   }
 
@@ -483,4 +484,4 @@ cv::Mat EdgeDetect::projectWorldPointToImage(cv::InputArray image, const ros::Ti
 
 /* every nodelet must include macros which export the class as a nodelet plugin */
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(vision_example::EdgeDetect, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(vision_example::EdgeDetector, nodelet::Nodelet);

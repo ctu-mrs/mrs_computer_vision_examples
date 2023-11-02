@@ -12,6 +12,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>cmake_modules</depend>
   <depend>roscpp</depend>
   <depend>nodelet</depend>
   <depend>std_msgs</depend>
@@ -23,9 +24,7 @@
   <depend>image_geometry</depend>
 
   <export>
-    <!-- The plugins.xml file defines nodelet as a plugin -->
-    <nodelet plugin="${prefix}/plugins.xml" />
-
+    <nodelet plugin="${prefix}/nodelets.xml" />
   </export>
 
 </package>
