@@ -25,7 +25,7 @@
   <group ns="$(arg UAV_NAME)">
 
     <!-- EdgeDetect nodelet -->
-    <node pkg="nodelet" type="nodelet" name="vision_example" args="$(arg nodelet) vision_example/EdgeDetector $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
+    <node pkg="nodelet" type="nodelet" name="edge_detector" args="$(arg nodelet) example_computer_vision/EdgeDetector $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
 
       <!-- Parameters loaded from launch file -->
       <param name="gui" type="bool" value="$(arg gui)"/>
@@ -33,7 +33,7 @@
       <param name="UAV_NAME" type="string" value="$(arg UAV_NAME)"/>
 
       <!-- ROS parameters config file -->
-      <rosparam file="$(find vision_example)/config/vision_example.yaml" />
+      <rosparam file="$(find example_computer_vision)/config/edge_detector.yaml" />
 
       <!-- Subscribers (note that the topic names will also be remapped using the namespace as a prefix) -->
       <remap from="~image_in" to="mobius_front/image_raw" />

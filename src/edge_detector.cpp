@@ -40,7 +40,7 @@
 
 //}
 
-namespace vision_example
+namespace example_computer_vision
 {
 
 /* class EdgeDetector //{ */
@@ -480,8 +480,8 @@ cv::Mat EdgeDetector::projectWorldPointToImage(cv::InputArray image, const ros::
 
 //}
 
-}  // namespace vision_example
+}  // namespace example_computer_vision
 
 /* every nodelet must include macros which export the class as a nodelet plugin */
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS(vision_example::EdgeDetector, nodelet::Nodelet);
+PLUGINLIB_EXPORT_CLASS(example_computer_vision::EdgeDetector, nodelet::Nodelet);

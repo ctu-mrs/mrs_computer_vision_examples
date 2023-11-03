@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
 
-  <name>vision_example</name>
+  <name>example_computer_vision</name>
   <version>1.0.0</version>
-  <description>Detects edges using Canny detector</description>
+  <description>The computer vision example for the MRS UAV System</description>
 
   <maintainer email="matej.petrlik@fel.cvut.cz">Matej Petrlik</maintainer>
   <author email="matej.petrlik@fel.cvut.cz">Matej Petrlik</author>
@@ -13,15 +13,15 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>cmake_modules</depend>
-  <depend>roscpp</depend>
-  <depend>nodelet</depend>
-  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_geometry</depend>
   <depend>image_transport</depend>
   <depend>mrs_lib</depend>
-  <depend>cv_bridge</depend>
-  <depend>tf2_ros</depend>
+  <depend>nodelet</depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
   <depend>tf2_geometry_msgs</depend>
-  <depend>image_geometry</depend>
+  <depend>tf2_ros</depend>
 
   <export>
     <nodelet plugin="${prefix}/nodelets.xml" />

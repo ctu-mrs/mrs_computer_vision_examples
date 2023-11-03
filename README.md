@@ -5,6 +5,7 @@ For a more general package example, see [https://github.com/ctu-mrs/example_ros_
 You can test the program in simulation (see our [simulation tutorial](https://ctu-mrs.github.io/docs/simulation/howto.html)).
 
 ## Example features
+
 * Subscribing to camera topic (using ImageTransport, which is agnostic to the image compression etc.)
 * Publishing images (again using ImageTransport, enabling automatic compression of the output)
 * Basic OpenCV image processing (Canny edge detection, image blurring etc.)
@@ -12,6 +13,12 @@ You can test the program in simulation (see our [simulation tutorial](https://ct
 * Using TF2 to transform points between frames
 * Backprojection of 3D points to the camera image
 * Other features, which overlap with the [waypoint_flier](https://github.com/ctu-mrs/example_ros_uav) template
+
+## How to start it?
+
+```bash
+./tmux/start.sh
+```
 
 ## Coding practices
 
@@ -27,6 +34,7 @@ In contrast to `cv_bridge::toCvCopy()`, which allows modifying the returned data
 This is why you must *avoid modifying the image, returned by `cv_bridge::toCvShare()`*!
 
 The rule of thumb whether to use `cv_bridge::toCvCopy()` or `cv_bridge::toCvShare()` can be summarized as:
+
 * If you plan on modifying the image data (such as drawing to the image, blurring it, applying erosion etc.), either use `cv_bridge::toCvShare()` and then `cv::Mat::copyTo()` the returned OpenCV matrix to one you are going to modify, or simply use `cv_bridge::toCvCopy()`.
 * If you don't want to modify the image data (for example when you only want to display it or if you want to use e.g. `cv::cvtColor()` to convert a color image to grayscale), use `cv_bridge::toCvShare()` to avoid unnecessary copies.
 
@@ -50,6 +58,7 @@ Some cameras (such as cameras from the Realsense family) publish already undisto
 The undistort/distort steps can then be skipped, but it's usually better practice to leave them in in case a different camera was used.
 
 **Using `image_geometry::PinholeCameraModel` to project a 2D point to 3D has more or less the following steps:**
+
 1) Obtain parameters of the camera to be used. Usually, a camera will publish these parameters on the corresponding `camera_info` topic.
 2) Initialize the `image_geometry::PinholeCameraModel` using the parameters from step 1.
 3) Undistort the point coordinates. Use the `image_geometry::PinholeCameraModel::rectifyPoint()` method.
@@ -58,8 +67,9 @@ The undistort/distort steps can then be skipped, but it's usually better practic
 Note that the result is a 3D vector in the camera optical coordinate frame.
 To get a 3D point, you need to somehow estimate the distance of the point from the camera center.
 It may also be necessary to transform the point to other coordinate frame (see the next section for how to use the ROS TF2 framework).
- 
+
 **Using `image_geometry::PinholeCameraModel` to backproject a 3D point to the image (this is demonstrated in the `EdgeDetect` nodelet):**
+
 1) Obtain parameters of the camera to be used. Usually, a camera will publish these parameters on the corresponding `camera_info` topic.
 2) Initialize the `image_geometry::PinholeCameraModel` using the parameters from step 1.
 2) Transform the 3D point to the camera optical coordinate frame. Use the ROS TF2 framework as described in the next section.
@@ -67,6 +77,7 @@ It may also be necessary to transform the point to other coordinate frame (see t
 4) Apply camera distortion. Use the `image_geometry::PinholeCameraModel::unrectifyPoint()` method.
 
 ### Using the ROS TF2 framework for transforming stuff between different coordinate frames
+
 *Reference documentation: [TF2 docs](http://wiki.ros.org/tf2_ros), [tutorial](http://wiki.ros.org/tf2/Tutorials/Introduction%20to%20tf2)*
 
 First off, you can use `rosrun rqt_tf_tree rqt_tf_tree` or `rosrun tf view_frames && zathura frames.pdf && rm frames.pdf && rm frames.gv` (the first one is recommended) to inspect frames, which are currently available in `roscore`, and their mutual connections.
@@ -82,6 +93,7 @@ Aditionally, you need a `tf2_ros::TransformListener`, which listens to the trans
 Because the `tf2_ros::TransformListener` class does not implement the assignment operator and it cannot be initialized in the constructor of a nodelet, the usual practice is to have a smart-pointer member variable (i.e. `std::unique_ptr<tf2_ros::TransformListener>`) and instantiate the object in the `OnInit()` method of the nodelet class using `std::make_unique<tf2_ros::TransformListener>()`.
 
 To actually do the transformation, you need to follow these steps:
+
 1) Try to lookup the transform using `tf2_ros::Buffer::lookupTransform()` and a `try` block.
 2) Catch a potential `tf2::TransformException` exception using a `catch` block. If exception is caught, alert the user and abort the transformation process.
 3) If the lookup was successful, do the actual transformation using `tf2::doTransform()`.

@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 3.1.2)
-project(vision_example)
+project(example_computer_vision)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CATKIN_DEPENDENCIES
-  image_transport
   cmake_modules
+  cv_bridge
+  image_geometry
+  image_transport
+  nodelet
+  mrs_lib
   roscpp
   std_msgs
-  cv_bridge
-  tf2_ros
   tf2_geometry_msgs
-  image_geometry
-  mrs_lib
+  tf2_ros
   )
 
 set(LIBRARIES
