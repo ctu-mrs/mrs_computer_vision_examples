@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>example_blob_detector</name>
+  <version>1.0.0</version>
+  <description>The Python Example for Blob Detector</description>
+
+  <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
+  <author email="tomas.baca@fel.cvut.cz">Tomas Baca</author>
+
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+
+  <export>
+  </export>
+
+</package>

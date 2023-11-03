@@ -1,0 +1,23 @@
+<launch>
+
+  <!-- defines name of the namespace of the drone -->
+  <arg name="UAV_NAME" default="$(optenv UAV_NAME uav1)" />
+
+    <!-- Namespace - all topics, services and parameters will be remapped using this namespace as a prefix (eg.: "/waypoint_flier_simple/odom_uav_in" to "/uav1/waypoint_flier_simple/odom_uav_in") -->
+  <group ns="$(arg UAV_NAME)">
+
+    <node pkg="example_blob_detector" type="blob_detector.py" name="blob_detector" output="screen">
+
+      <rosparam file="$(find example_blob_detector)/config/blob_detector.yaml" />
+
+      <remap from="~image_raw_in" to="mobius_front/image_raw" />
+      <remap from="~camera_info_in" to="mobius_front/camera_info" />
+
+      <remap from="~image_raw_out" to="~processed_image/image_raw" />
+      <remap from="~camera_info_out" to="~processed_image/image_raw/camera_info" />
+
+    </node>
+
+  </group>
+
+</launch>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
 
-  <name>example_computer_vision</name>
+  <name>example_edge_detector</name>
   <version>1.0.0</version>
   <description>The computer vision example for the MRS UAV System</description>
 

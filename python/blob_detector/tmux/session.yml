@@ -15,7 +15,7 @@ windows:
   - gazebo:
       layout: tiled
       panes:
-        - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=grass_plane gui:=true
+        - waitForRos; roslaunch mrs_uav_gazebo_simulation simulation.launch world_name:=forest gui:=true
         - waitForControl; gz camera -c gzclient_camera -f $UAV_NAME; history -s gz camera -c gzclient_camera -f $UAV_NAME
   - status:
       layout: tiled
@@ -40,7 +40,8 @@ windows:
   - edge_detector:
       layout: tiled
       panes:
-        - waitForHw; roslaunch example_computer_vision edge_detector.launch
+        - waitForHw; roslaunch example_blob_detector blob_detector.launch
+        - waitForHw; rosrun rqt_image_view rqt_image_view /$UAV_NAME/blob_detector/processed_image/image_raw
   - takeoff:
       layout: tiled
       panes:
