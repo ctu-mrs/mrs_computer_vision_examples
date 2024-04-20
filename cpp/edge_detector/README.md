@@ -1,7 +1,7 @@
 # MRS ROS C++ Vision example
 
 This package was created as an example of how to use OpenCV and write packages for image processing or computer vision.
-For a more general package example, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
+For a more general package example, see the [waypoint_flier](https://github.com/ctu-mrs/mrs_core_examples/tree/master/cpp/waypoint_flier).
 You can test the program in simulation (see our [simulation tutorial](https://ctu-mrs.github.io/docs/simulation/howto.html)).
 
 ## Example features
@@ -12,7 +12,7 @@ You can test the program in simulation (see our [simulation tutorial](https://ct
 * Basic OpenCV drawing functions
 * Using TF2 to transform points between frames
 * Backprojection of 3D points to the camera image
-* Other features, which overlap with the [waypoint_flier](https://github.com/ctu-mrs/example_ros_uav) template
+* Other features, which overlap with the [waypoint_flier](https://github.com/ctu-mrs/mrs_core_examples/tree/master/cpp/waypoint_flier) template
 
 ## How to start it?
 
@@ -23,7 +23,7 @@ You can test the program in simulation (see our [simulation tutorial](https://ct
 ## Coding practices
 
 Coding practices, related to packages working with images, are described here.
-For a more detailed description of good programming practices in the context of ROS, see [https://github.com/ctu-mrs/example_ros_uav](https://github.com/ctu-mrs/example_ros_uav).
+For a more detailed description of good programming practices in the context of ROS, see the [waypoint_flier](https://github.com/ctu-mrs/mrs_core_examples/tree/master/cpp/waypoint_flier).
 Also check out our general [C++ good/bad coding practices tutorial](https://ctu-mrs.github.io/docs/introduction/c_to_cpp.html).
 
 ### Using `cv_bridge::toCvShare()` or `cv_bridge::toCvCopy()` for converting between `sensor_msgs::Image` and `cv::Mat`
