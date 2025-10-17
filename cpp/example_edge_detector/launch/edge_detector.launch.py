@@ -74,7 +74,6 @@ def generate_launch_description():
             name='edge_detector',
             parameters=[
                 {"uav_name": uav_name},
-                {"gui": gui},
                 {"use_sim_time": use_sim_time},
                 {"config": this_pkg_path+'/config/edge_detector.yaml'},
 
