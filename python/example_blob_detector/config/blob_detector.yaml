@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    min_area: 200
+    max_area: 10000

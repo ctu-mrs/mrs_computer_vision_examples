@@ -1,4 +1,4 @@
-# Blob Detector
+# Example Blob Detector
 
 ## How to start
 

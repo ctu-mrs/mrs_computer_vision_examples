@@ -1,20 +1,25 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
 
   <name>example_blob_detector</name>
-  <version>1.0.0</version>
-  <description>The Python Example for Blob Detector</description>
+  <version>2.0.0</version>
 
-  <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
+  <description>Example Blob Detector</description>
+
   <author email="tomas.baca@fel.cvut.cz">Tomas Baca</author>
+  <maintainer email="tomas.baca@fel.cvut.cz">Tomas Baca</maintainer>
 
-  <license>MIT</license>
+  <license>BSD 3-Clause</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>rospy</depend>
+  <depend>rclpy</depend>
+  <depend>ament_cmake</depend>
+  <depend>ament_cmake_python</depend>
+  <depend>python3-opencv</depend>
+  <depend>cv_bridge</depend>
 
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 
 </package>
