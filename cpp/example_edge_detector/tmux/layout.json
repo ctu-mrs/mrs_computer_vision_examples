@@ -5,7 +5,7 @@
 		"fullscreen_mode": 0,
 		"layout": "splitv",
 		"marks": [],
-		"percent": null,
+		"percent": 0.377358490566038,
 		"type": "con",
 		"nodes": [
 		{
@@ -13,7 +13,7 @@
 			"floating": "auto_off",
 			"layout": "splith",
 			"marks": [],
-			"percent": 0.66,
+			"percent": 1,
 			"type": "con",
 			"nodes": [
 			{
@@ -29,17 +29,37 @@
 					"current_border_width": 3,
 					"floating": "auto_off",
 					"geometry": {
-						"height": 1000,
-						"width": 1200,
+						"height": 436,
+						"width": 804,
 						"x": 0,
 						"y": 0
 					},
 					"marks": [],
-					"name": "Gazebo Sim",
-					"percent": 1,
+					"name": "./rviz.rviz* - RViz",
+					"percent": 0.58,
 					"swallows": [
 					{
-						"instance": "^gz-sim-gui$"
+						"instance": "^rviz2$"
+					}
+					],
+					"type": "con"
+				},
+				{
+					"border": "pixel",
+					"current_border_width": 3,
+					"floating": "auto_off",
+					"geometry": {
+						"height": 436,
+						"width": 804,
+						"x": 0,
+						"y": 0
+					},
+					"marks": [],
+					"name": "./start.sh",
+					"percent": 0.42,
+					"swallows": [
+					{
+						"instance": "^urxvt$"
 					}
 					],
 					"type": "con"
@@ -47,46 +67,56 @@
 				]
 			},
 			{
-				"border": "pixel",
-				"current_border_width": 3,
+				"border": "normal",
 				"floating": "auto_off",
-				"geometry": {
-					"height": 506,
-					"width": 1890,
-					"x": 12,
-					"y": 556
-				},
+				"layout": "splitv",
 				"marks": [],
-				"name": "./rviz.rviz* - RViz",
 				"percent": 0.5,
-				"swallows": [
+				"type": "con",
+				"nodes": [
 				{
-					"instance": "^rviz2$"
+					"border": "pixel",
+					"current_border_width": 3,
+					"floating": "auto_off",
+					"geometry": {
+						"height": 436,
+						"width": 804,
+						"x": 0,
+						"y": 0
+					},
+					"marks": [],
+					"name": "Gazebo Sim",
+					"percent": 0.5,
+					"swallows": [
+					{
+						"instance": "^gz-sim-gui$"
+					}
+					],
+					"type": "con"
+				},
+				{
+					"border": "pixel",
+					"current_border_width": 3,
+					"floating": "auto_off",
+					"geometry": {
+						"height": 436,
+						"width": 804,
+						"x": 0,
+						"y": 0
+					},
+					"marks": [],
+					"name": "rqt_reconfigure__Param - rqt",
+					"percent": 0.5,
+					"swallows": [
+					{
+						"instance": "^rqt_reconfigure$"
+					}
+					],
+					"type": "con"
 				}
-				],
-				"type": "con"
+				]
 			}
 			]
-		},
-		{
-			"border": "pixel",
-			"current_border_width": 3,
-			"floating": "auto_off",
-			"geometry": {
-				"height": 436,
-				"width": 804,
-				"x": 0,
-				"y": 0
-			},
-			"marks": [],
-			"name": "urxvt",
-			"percent": 0.34,
-			"swallows": [
-			{
-				"instance": "^urxvt$"
-			}
-			],
-			"type": "con"
 		}
 		]
 }
