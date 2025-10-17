@@ -6,7 +6,7 @@
 
 ## Python
 
-* [Blob Detector](./python/blob_detector) - Simple Python ROS Example with OpenCV Blob detector
+* [example_blob_detector](./python/example_blob_detector) - Basic Python ROS Example with OpenCV Blob detector
 
 # Disclaimer
 
