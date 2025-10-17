@@ -25,6 +25,9 @@ install(
   DESTINATION share/${PROJECT_NAME}
   )
 
+file(GLOB PYTHON_ENV_FILES python-env/*)
+install(FILES ${PYTHON_ENV_FILES} DESTINATION share/${PROJECT_NAME}/python-env)
+
 install(
   FILES ${PROJECT_NAME}/blob_detector.py
   DESTINATION lib/${PROJECT_NAME}

@@ -13,6 +13,9 @@ from sensor_msgs.msg import CameraInfo
 import cv2
 from cv_bridge import CvBridge
 
+from PIL import Image as PilImage
+from PIL import ImageFilter, ImageDraw, ImageFont
+
 class BlobDetector(Node):
 
     def __init__(self):
@@ -69,6 +72,22 @@ class BlobDetector(Node):
 
         original_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 
+        ## | -------- do some image modifications using pillow -------- |
+
+        # convert opencv image to pillow image
+        cv_rgb = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+        pil_img = PilImage.fromarray(cv_rgb)
+
+        blurred = pil_img.filter(ImageFilter.GaussianBlur(3))
+        draw = ImageDraw.Draw(blurred)
+        draw.ellipse((20, 20, 100, 200), fill="blue", width=5)
+        draw.ellipse((300, 300, 500, 400), fill="green", width=5)
+
+        # convert back from pillow to opencv
+        cv_back = cv2.cvtColor(np.array(blurred), cv2.COLOR_RGB2BGR)
+
+        ## | -------------- prepare opencv blob detector -------------- |
+
         # Adjust detection parameters
         params = cv2.SimpleBlobDetector_Params()
 
@@ -97,11 +116,11 @@ class BlobDetector(Node):
         detector = cv2.SimpleBlobDetector_create(params)
 
         # Detect blobs.
-        keypoints = detector.detect(original_image)
+        keypoints = detector.detect(cv_back)
 
         # Draw detected blobs as red circles.
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
-        im_with_keypoints = cv2.drawKeypoints(original_image, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        im_with_keypoints = cv2.drawKeypoints(cv_back, keypoints, np.array([]), (0, 0, 255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
         # publish the new image with the camera info
         self.pub_cam_info_.publish(self.camera_info_)

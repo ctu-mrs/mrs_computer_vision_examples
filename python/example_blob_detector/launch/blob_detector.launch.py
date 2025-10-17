@@ -21,6 +21,8 @@ def generate_launch_description():
 
     this_pkg_path = get_package_share_directory(pkg_name)
 
+    venv_path = this_pkg_path + "/python-env/bin/python3"
+
     # #{ uav_name
 
     uav_name = LaunchConfiguration('uav_name')
@@ -40,6 +42,7 @@ def generate_launch_description():
         namespace=uav_name,
         name='blob_detector',
         executable='blob_detector.py',
+        prefix=[venv_path + ' '],
         parameters=[
             get_package_share_directory('example_blob_detector') + '/config/blob_detector.yaml',
         ],
