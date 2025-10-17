@@ -2,7 +2,7 @@
 
 ## C++
 
-* [Edge Detector](./cpp/edge_detector) - Comprehensive C++ ROS Example with OpenCV Edge detector
+* [example_edge Detector](./cpp/example_edge_detector) - Basic C++ ROS Example with OpenCV Edge detector
 
 ## Python
 
