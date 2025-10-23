@@ -44,6 +44,10 @@ windows:
       layout: tiled
       panes:
         - ros2 launch example_blob_detector blob_detector.launch.py
+  - static_tfs:
+      layout: tiled
+      panes:
+        - ./config/static_tfs.sh
   - autostart:
       layout: tiled
       panes:
