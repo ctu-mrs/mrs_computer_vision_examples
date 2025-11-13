@@ -29,8 +29,9 @@ file(GLOB PYTHON_ENV_FILES python-env/*)
 install(FILES ${PYTHON_ENV_FILES} DESTINATION share/${PROJECT_NAME}/python-env)
 
 install(
-  FILES ${PROJECT_NAME}/blob_detector.py
-  DESTINATION lib/${PROJECT_NAME}
+  DIRECTORY ${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  DESTINATION lib
   )
 
 ament_python_install_package(${PROJECT_NAME})
