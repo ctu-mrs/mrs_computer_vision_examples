@@ -3,7 +3,7 @@ name: ros_build_test
 on:
 
   push:
-    branches: [ master ]
+    branches: [ ros2_devel ]
 
     paths-ignore:
       - '**/README.md'
@@ -12,7 +12,7 @@ on:
     - cron:  '0 8 * * *' # every day at 10am UTC+2
 
   pull_request:
-    branches: [ master ]
+    branches: [ ros2 ]
 
   workflow_dispatch:
 
